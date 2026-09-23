@@ -12,6 +12,16 @@ export async function createOrdinaryGenerator({appearance,peekNeckUv}) {
  const decoded=decodeAppearance(appearance);
  const scene=new THREE.Scene(),world=new CANNON.World();
  const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});
+ const pixelsCanvas=document.createElement('canvas');
+ const pixelsContext=pixelsCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
+ function capturePixels(){
+  const {width,height}=renderer.domElement;
+  if(pixelsCanvas.width!==width)pixelsCanvas.width=width;
+  if(pixelsCanvas.height!==height)pixelsCanvas.height=height;
+  pixelsContext.clearRect(0,0,width,height);
+  pixelsContext.drawImage(renderer.domElement,0,0);
+  return {width,height,data:pixelsContext.getImageData(0,0,width,height).data};
+ }
  renderer.setPixelRatio(1);renderer.setClearColor(0,0);renderer.outputColorSpace=THREE.SRGBColorSpace;
  scene.add(new THREE.AmbientLight(0xffffff,1.55));
  const key=new THREE.DirectionalLight('#fff6e6',1.65);key.position.set(-4,-6,9);scene.add(key);
@@ -29,6 +39,7 @@ export async function createOrdinaryGenerator({appearance,peekNeckUv}) {
   for(const t of textures)t.dispose();for(const m of materials)m.dispose();for(const g of geometries)g.dispose();
   for(const c of [...world.constraints])world.removeConstraint(c);for(const b of [...world.bodies])world.removeBody(b);
   scene.clear();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();
+  pixelsCanvas.width=pixelsCanvas.height=0;
  }
  try{doll=await createAppearance({...decoded,headScale:1},scene,world,[]);}catch(error){dispose();throw error;}
 function setPreviewHeadScale(doll,scale){
@@ -75,7 +86,7 @@ function garmentCollar(doll){
  return collar.divideScalar(count);
 }
 
-function renderLayers(requestedClip,requestedFrame){
+function render(requestedClip,requestedFrame,pixels){
  if(disposed)throw Error('generator_disposed');
  const {clip,frame}=canonicalFrame(requestedClip,requestedFrame);
  const d=doll;
@@ -108,7 +119,7 @@ function renderLayers(requestedClip,requestedFrame){
   d.parts.head.visual.position.add(collar.sub(chin));scene.updateMatrixWorld(true);
  }
  const anchor=head.localToWorld(chinPoint.clone()).project(layerCamera);
- head.visible=false;renderer.render(scene,layerCamera);const body=renderer.domElement.toDataURL('image/png');head.visible=true;
+ head.visible=false;renderer.render(scene,layerCamera);const body=pixels?capturePixels():renderer.domElement.toDataURL('image/png');head.visible=true;
  const meshes=[];scene.traverseVisible(o=>{if(o.isMesh&&o!==head){meshes.push(o);o.visible=false;}});
  // Render the original photo at higher density BEFORE any slider scaling.
  // Crop by projected geometry (including off-screen peek), never by the viewport.
@@ -121,12 +132,12 @@ function renderLayers(requestedClip,requestedFrame){
  layerCamera.left=left/size*5.3-2.65;layerCamera.right=right/size*5.3-2.65;
  layerCamera.top=2.65-top/size*5.3;layerCamera.bottom=2.65-bottom/size*5.3;
  layerCamera.updateProjectionMatrix();renderer.setSize((right-left)*headDensity,(bottom-top)*headDensity,false);
- renderer.render(scene,layerCamera);const photo=renderer.domElement.toDataURL('image/png');for(const o of meshes)o.visible=true;
+ renderer.render(scene,layerCamera);const photo=pixels?capturePixels():renderer.domElement.toDataURL('image/png');for(const o of meshes)o.visible=true;
  head.quaternion.copy(photoRotation);d.parts.head.visual.position.copy(headPosition);neckSkin.visible=neckVisible;
  for(const b of shifted)b.visual.position.x-=shift;
  const f=clip==='edgehide'?23:clip==='unpeek'?23-frame:frame;
  return {body,head:photo,anchor:[(anchor.x+1)*size/2,(1-anchor.y)*size/2],headOrigin:[left,top],headDensity,hidden:edge&&f===0,edgeReveal:edge?Math.sin(f/23*Math.PI/2):null};
 };
 
-return {renderLayers,dispose,inspect:()=>({disposed,width:416,height:416,headDensity:3,bodies:world.bodies.length,renderer:renderer.info.memory,appearance:doll.inspectAppearance()})};
+return {renderLayers:(clip,frame)=>render(clip,frame,false),renderPixels:(clip,frame)=>render(clip,frame,true),dispose,inspect:()=>({disposed,width:416,height:416,headDensity:3,bodies:world.bodies.length,renderer:renderer.info.memory,appearance:doll.inspectAppearance()})};
 }
