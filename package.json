@@ -7,6 +7,7 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "test:delivery": "npm test && npm run build && python3 scripts/audit.py",
-    "build": "python3 scripts/build.py"
+    "build": "python3 scripts/build.py",
+    "test:ordinary": "node --test tests/ordinary-spec.test.mjs"
   }
 }
