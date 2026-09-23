@@ -1,0 +1,12 @@
+{
+  "name": "pet-ragdoll-renderer",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:delivery": "npm test && npm run build && python3 scripts/audit.py",
+    "build": "python3 scripts/build.py"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "retrieved": "2026-09-20",
+  "ragdoll": {
+    "repository": "https://github.com/pmndrs/cannon-es",
+    "commit": "dd971c4a604acdbb211955382e7a80de1f31edfb",
+    "file": "examples/ragdoll.html",
+    "license": "MIT"
+  },
+  "runtime": {
+    "cannon-es": "0.20.0",
+    "three": "0.164.1"
+  },
+  "sha256": {
+    "upstream/ragdoll.html": "776fc805bdec83b4d75065444edac0c17c9b0e9c13d4cb2d48f886ca6282b7d3",
+    "upstream/LICENSE.cannon-es": "4714d0272f50cb21fe46fe29333c7c600d3c85b5ebd2a80f4db07e8cfccbf5b2",
+    "vendor/cannon-es.js": "f0700cbd3a482954949b9d58c1b0f76dcc74767750297647a39d8c40dd63d37c",
+    "vendor/three.module.js": "a97ec6852978949b7941c070b81292b842473a37549222353fa0a70c18d7285a",
+    "vendor/LICENSE.three": "4c40a1ef62450b857c3b2aaf294936304cd552d965fbcd9d32d4c5bcf4ba4454"
+  }
+}

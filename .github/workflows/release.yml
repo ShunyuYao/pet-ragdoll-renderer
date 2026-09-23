@@ -1,0 +1,39 @@
+name: Verify and release
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run test:delivery
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-package
+          path: dist/
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: verify
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: plugin-package
+          path: dist/
+      - name: Check tag and publish CI package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "${GITHUB_REF_NAME}" = "v$(node -p "require('./manifest.json').version")"
+          gh release create "${GITHUB_REF_NAME}" dist/plugin.zip dist/sha256.txt --prerelease --title "布偶基础套件 ${GITHUB_REF_NAME}" --notes-file RELEASE.md
