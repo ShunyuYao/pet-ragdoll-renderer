@@ -1,6 +1,6 @@
 {
   "name": "pet-ragdoll-renderer",
-  "version": "0.2.0",
+  "version": "0.2.1-preview.1",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -8,6 +8,8 @@
     "test": "node --test tests/*.test.mjs",
     "test:delivery": "npm test && npm run build && python3 scripts/audit.py",
     "build": "python3 scripts/build.py",
-    "test:ordinary": "node --test tests/ordinary-spec.test.mjs"
+    "test:ordinary": "node --test tests/ordinary-spec.test.mjs",
+    "test:frame-loop": "node --test tests/frame-loop.test.mjs",
+    "test:drag-anchor": "node --test tests/drag-anchor.test.mjs"
   }
 }

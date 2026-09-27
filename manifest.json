@@ -1,7 +1,7 @@
 {
   "id": "rat-doll-renderer",
   "name": "布偶基础套件",
-  "version": "0.2.0",
+  "version": "0.2.1-preview.1",
   "apiVersion": 1,
   "description": "通用骨架、衣服蒙皮及布偶物理渲染；不含角色素材。需支持实时渲染的受邀测试宿主和 v2 角色数据。",
   "kind": [

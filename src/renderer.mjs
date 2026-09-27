@@ -5,6 +5,8 @@ import {createAppearance} from './appearance.mjs';
 import {pose} from './pose.mjs';
 import {createReleaseMotion} from './release-motion.mjs';
 import {createRecoveryPose} from './recovery-pose.mjs';
+import {createFrameLoop} from './frame-loop.mjs';
+import {followGrabTarget} from './drag-anchor.mjs';
 
 const SPAN=5.3;
 const scene=new THREE.Scene();
@@ -20,7 +22,7 @@ const world=new CANNON.World({gravity:new CANNON.Vec3(0,0,-9.82)});
 world.solver.iterations=24;world.defaultContactMaterial.friction=.6;world.defaultContactMaterial.restitution=.03;
 const floor=new CANNON.Body({mass:0,shape:new CANNON.Plane()});floor.collisionFilterGroup=1;world.addBody(floor);
 const ray=new THREE.Raycaster(), draggable=[];
-let doll,config,session,initialized=false,phase='loading',seq=0,inFlight=null,lastSent=0,lastTick=performance.now();
+let doll,config,session,initialized=false,phase='loading',seq=0,inFlight=null,lastSent=0;
 let grabConstraint=null,grabAnchor=null,target=null,landedAt=null,recovery=null,frameCount=0,grabs=0,landed=0;
 let center={x:0,z:2.48},lastInputAt=0,grabbedPart=null;
 let lastPick=null;
@@ -125,7 +127,7 @@ function startRecovery(placeAt){
 }
 function updateCamera(){camera.position.set(center.x,-9,center.z);camera.lookAt(center.x,0,center.z);camera.updateMatrixWorld(true);}
 function emit(now){
-  if(inFlight!==null||now-lastSent<1000/30)return;
+  if(inFlight!==null)return;
   const box=bounds();
   // Moving the crop changes only the camera/window pair, never the physics world.
   if(phase!=='idle')center={x:(box.min.x+box.max.x)/2,z:Math.max(SPAN/2,(box.min.z+box.max.z)/2)};
@@ -136,7 +138,7 @@ function emit(now){
   const pixels=copyCtx.getImageData(0,0,copy.width,copy.height).data;
   const x=config.workArea.x+(flip===-1?config.workArea.width-center.x*ppu():center.x*ppu())-config.size/2;
   const y=config.workArea.y+config.workArea.height-center.z*ppu()-config.size/2;
-  inFlight=++seq;lastSent=now-((now-lastSent)%(1000/30));frameCount++;
+  inFlight=++seq;lastSent=now;frameCount++;
   presentedPoses.set(seq,{pose:savePose(),center:{...center},x,y});
   while(presentedPoses.size>8)presentedPoses.delete(presentedPoses.keys().next().value);
   window.renderHost.frame({session,seq,width:copy.width,height:copy.height,pixels,x,y,phase,landed,
@@ -169,18 +171,14 @@ window.renderHost.onControl(p=>{
     if(p.type==='cancel'){release();change('idle');lastSent=0;wakeLoop();}
   }catch(e){window.renderHost.fail(e.stack);}
 });
-function tickRealtime(){
+function tickRealtime(dt,now){
   try{
-    const now=performance.now(),dt=Math.min(.05,Math.max(0,(now-lastTick)/1000));lastTick=now;
     if(!initialized)return;
     if(['grabbing','falling','settling'].includes(phase)){
       if(grabAnchor&&target){
-        // Like the original web drag, the anchor has a prescribed position, not
-        // a velocity chasing that position across a variable number of substeps.
-        // Limit large pointer jumps without injecting any motion at rest.
-        const delta=target.vsub(grabAnchor.position),distance=delta.length();
-        if(distance>0)grabAnchor.position.addScaledVector(Math.min(1,20*dt/distance),delta,grabAnchor.position);
-        grabAnchor.velocity.setZero();grabAnchor.aabbNeedsUpdate=true;
+        // Carry excess movement with the rig, so fast input remains responsive
+        // while the constraint receives the same bounded relative travel.
+        followGrabTarget(grabAnchor,target,doll.bodies,dt);
       }
       world.step(1/120,dt,6);visuals();
       if(!doll.bodies.every(b=>[b.position.x,b.position.y,b.position.z].every(Number.isFinite)))throw Error('physics_nonfinite');
@@ -202,12 +200,12 @@ function tickRealtime(){
     if(phase!=='idle'||lastSent===0)emit(now);
   }catch(e){stopLoop();window.renderHost.fail(e.stack);}
 }
-let loopTimer=null;
-function stopLoop(){if(loopTimer!==null)clearInterval(loopTimer);loopTimer=null;}
-function wakeLoop(){
-  if(loopTimer!==null)return;
-  lastTick=performance.now();
-  loopTimer=setInterval(()=>{tickRealtime();if(phase==='idle')stopLoop();},1000/60);
-}
+const loop=createFrameLoop({
+  requestFrame:callback=>requestAnimationFrame(callback),cancelFrame:id=>cancelAnimationFrame(id),
+  now:()=>performance.now(),tick:tickRealtime,shouldContinue:()=>phase!=='idle',
+  onError:error=>window.renderHost.fail(error.stack),
+});
+function stopLoop(){loop.stop();}
+function wakeLoop(){loop.start();}
 window.addEventListener('pagehide',stopLoop);
-Object.defineProperty(window,'m0Physics',{get:()=>({...window.renderHost.diagnostics,phase,loopActive:loopTimer!==null,grabs,landed,frameCount,inFlight,transitions,bodyCount:world.bodies.length,constraintCount:world.constraints.length,appearance:doll?.inspectAppearance()})});
+Object.defineProperty(window,'m0Physics',{get:()=>({...window.renderHost.diagnostics,phase,loopActive:loop.active,pointer:lastPointer?{...lastPointer}:null,grabLag:grabAnchor&&target?grabAnchor.position.distanceTo(target)*ppu():null,grabBodyLag:grabAnchor&&grabPoint?grabPoint.body.pointToWorldFrame(grabPoint.pivot).distanceTo(grabAnchor.position)*ppu():null,grabs,landed,frameCount,inFlight,transitions,bodyCount:world.bodies.length,constraintCount:world.constraints.length,appearance:doll?.inspectAppearance()})});

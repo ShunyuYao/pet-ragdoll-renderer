@@ -11,7 +11,7 @@ allowed = {
     'manifest.json', 'README.md', 'LICENSE', 'NOTICE.md', 'index.html',
     'appearance.mjs', 'doll-appearance.js', 'garment-rig.js', 'photo-head.js',
     'pose.mjs', 'ragdoll-adapter.js', 'recovery-pose.mjs', 'release-motion.mjs',
-    'renderer.mjs', 'sdk-bridge.mjs', 'data-contract.mjs', 'texture-budget.mjs',
+    'renderer.mjs', 'frame-loop.mjs', 'drag-anchor.mjs', 'sdk-bridge.mjs', 'data-contract.mjs', 'texture-budget.mjs',
     'vendor/three.module.js', 'vendor/cannon-es.js', 'vendor/LICENSE.three',
     'upstream/LICENSE.cannon-es', 'upstream/provenance.json', 'upstream/ragdoll.html',
 }
