@@ -2,7 +2,7 @@
 // Keep the window bounded: deliberate placement, a pause or a slow reversal
 // must still cancel throw intent instead of latching an earlier fast movement.
 export const RELEASE_WINDOW_MS=120;
-export const RELEASE_SPEED=.55;
+export const RELEASE_SPEED=.35;
 export function createReleaseMotion(){
   let samples=[],direction=null;
   function sample(p){

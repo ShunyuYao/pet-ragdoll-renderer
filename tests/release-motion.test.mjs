@@ -5,11 +5,11 @@ const feed=(m,rows)=>rows.forEach(([t,x,y=0])=>m.sample({t,x,y}));
 test('slow travel stays place regardless of total distance',()=>{
  const m=createReleaseMotion();for(let t=0;t<=2000;t+=20)m.sample({t,x:t*.2,y:0});assert.equal(m.finish(2000).kind,'place');
 });
-test('deliberate placement below 0.55 DIP per ms stays place',()=>{
- for(const [vx,vy] of [[.2,0],[.54,0],[0,-.54],[.3,.3]]){const m=createReleaseMotion();for(let t=0;t<=200;t+=10)m.sample({t,x:t*vx,y:t*vy});assert.equal(m.finish(200).kind,'place');}
+test('deliberate placement below 0.35 DIP per ms stays place',()=>{
+ for(const [vx,vy] of [[.2,0],[.34,0],[0,-.34],[.2,.2]]){const m=createReleaseMotion();for(let t=0;t<=200;t+=10)m.sample({t,x:t*vx,y:t*vy});assert.equal(m.finish(200).kind,'place');}
 });
-test('comfortable flicks from 0.55 DIP per ms throw in every direction',()=>{
- for(const [vx,vy] of [[.55,0],[.75,0],[0,-.75],[.5,.5],[1.1,0]]){const m=createReleaseMotion();for(let t=0;t<=200;t+=10)m.sample({t,x:t*vx,y:t*vy});assert.equal(m.finish(200).kind,'throw');}
+test('comfortable flicks from 0.35 DIP per ms throw in every direction',()=>{
+ for(const [vx,vy] of [[.35,0],[.42,0],[0,-.42],[.3,.3],[.55,0],[.75,0],[0,-.75],[.5,.5],[1.1,0]]){const m=createReleaseMotion();for(let t=0;t<=200;t+=10)m.sample({t,x:t*vx,y:t*vy});assert.equal(m.finish(200).kind,'throw');}
 });
 test('a brief 40 ms release delay retains moderate throw intent',()=>{
  for(const step of [8,16,20]){const m=createReleaseMotion();for(let t=0;t<=240;t+=step)m.sample({t,x:t*.9,y:0});assert.equal(m.finish(280).kind,'throw');}
