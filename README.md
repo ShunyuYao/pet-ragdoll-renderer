@@ -6,7 +6,7 @@ Generic desktop-pet ragdoll physics and rendering provider. **No character asset
 
 ## 兼容范围 / Compatibility
 
-- Plugin ID: `rat-doll-renderer`; plugin version: `0.2.1-preview.1`.
+- Plugin ID: `rat-doll-renderer`; plugin version: `0.2.1-preview.2`.
 - Experimental host render bridge `apiVersion: 1`; appearance `dataVersion: 2`.
 - Compatibility baseline: invited macOS arm64 host candidate `0.26.0-ragdoll.1`. The older `0.26.0` host does not support renderer plugins and rejects this kind. Host installers remain available only through invited testing; none are distributed here.
 - 当前是实验套件，仅面向具备实时渲染能力的受邀测试宿主。宿主版本比较目前不严格区分候选后缀，不能仅凭 `≥ 0.26.0` 判断支持。旧宿主会在插件种类校验处拒绝安装。
@@ -19,11 +19,11 @@ The plugin owns the Three.js 0.164.1 / cannon-es 0.20.0 rig, garment geometry an
 
 宿主普通动作仍使用原来的 PNG 播放机制。本版本未实现普通动画本地生成，不承诺消除普通帧首次跨机传输的等待。
 
-## 本地流畅度候选 / Local smoothness candidate
+## 本地交互候选 / Local interaction candidate
 
-`0.2.1-preview.1` follows browser repaints while physics is active, pauses when idle, and retains one unacknowledged RGBA frame at most. The grab anchor follows the latest pointer position; large pointer jumps carry the rig without injecting an excessive constraint impulse, while ordinary movement keeps its existing physical response. This is an unreleased test candidate, not a universal frame-rate guarantee.
+`0.2.1-preview.2` follows browser repaints while physics is active, pauses when idle, and retains one unacknowledged RGBA frame at most. The grab anchor follows the latest pointer position; large pointer jumps carry the rig without injecting an excessive constraint impulse, while ordinary movement keeps its existing physical response. Release intent uses a 0.55 DIP/ms threshold over the latest 120 ms, accepting comfortable flicks and brief release delays while preserving slow placement, rest and reversal handling. This is an unreleased test candidate, not a universal frame-rate guarantee.
 
-本地待试玩版本：修正原 30 fps 限速及不均匀出帧；移除抓取锚点的额外追赶速度限制。普通动作、释放判断、角色素材与 SDK 不变；真实桌面手感尚待验收。
+本地待试玩版本：修正原 30 fps 限速及不均匀出帧；移除抓取锚点的额外追赶速度限制。释放速度门槛减半（1.1 → 0.55 DIP/ms），观察窗口放宽到 120 ms，让中等力度甩动和稍迟松手更容易被识别。慢拖、停稳与反向微调仍可轻放。普通动作、角色素材与 SDK 不变；本轮真实桌面手感尚待验收。
 
 ## 权限 / Permissions
 

@@ -1,8 +1,8 @@
-// Keep the fling-facing gesture's 100 ms window; throwing intentionally needs
-// a slightly faster gesture, without demanding a forceful fling to trigger it.
-// Unlike facing (which deliberately latches), release intent must expire at rest.
-export const RELEASE_WINDOW_MS=100;
-export const RELEASE_SPEED=1.1;
+// A comfortable flick should throw even if release trails the motion slightly.
+// Keep the window bounded: deliberate placement, a pause or a slow reversal
+// must still cancel throw intent instead of latching an earlier fast movement.
+export const RELEASE_WINDOW_MS=120;
+export const RELEASE_SPEED=.55;
 export function createReleaseMotion(){
   let samples=[],direction=null;
   function sample(p){
